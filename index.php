@@ -21,6 +21,7 @@
 		}
 		var players = {};
 		var character = {
+			name: '',
 			positions: [0,0],
 			view: null,
 			currentScene: 0,
@@ -34,6 +35,14 @@
 	<div id="container">
 		<canvas id="canvas1" data-processing-sources="js/processingCode.pjs" tabindex="0"></canvas>
 	</div>
+	<div id="chat">
+		<div id="msgDiv">
+			<ul id="messages"></ul>
+		</div>
+		<form action="">
+			<input id="inputMessage" placeholder="Type here..."/>
+		</form>
+	</div>
 	<h1>There is currently maintenance going on so things might not work properly</h1>
 	<h1>To go back or for the menu, press the '=' sign</h1>
 	<script type="text/javascript">
@@ -42,11 +51,11 @@
 		socket.emit('user', {
 			player: character,
 		});
-		character.new = false;
 		socket.on('player', function(data){ //2 arguments may cause an error
 			if( !(data.player.id in players) ) {
 				players[data.player.id] = data.player;
 			} else {
+				players[data.player.id].name = data.player.name;
 				players[data.player.id].positions = data.player.positions;
 				players[data.player.id].view = data.player.view;
 				players[data.player.id].currentScene = data.player.currentScene;
@@ -54,7 +63,24 @@
 			}
 		});
 		socket.on('playerDisconnect', function(data) {
-			players[data.id].online = false;
+			if(players[data.id] != undefined) {
+				players[data.id].online = false;
+			}
+		});
+
+		document.querySelector("form").addEventListener("submit", function(e){
+			e.preventDefault();
+			socket.emit('chatMessage', {
+				player: character,
+				msg: document.getElementById("inputMessage").value
+			});
+
+			document.getElementById("messages").innerHTML += "<li>You: "+document.getElementById("inputMessage").value+"</li>";
+			document.getElementById("inputMessage").value = '';
+		});
+
+		socket.on('chatMessage', function(data) {
+			document.getElementById("messages").innerHTML += "<li>"+data.player.name+": "+data.msg+"</li>";
 		});
 	</script>
 </body>

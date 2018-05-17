@@ -24,8 +24,54 @@ h2 {font-size: 125%;}
 .h img{	display:none;}
 .h { background-color: #2D649C; color:white; }
 hr {width: 600px; background-color: #cccccc; border: 0px; height: 1px; color: #000000;}
-canvas{outline: none; margin-top: 20px;}
+canvas{
+	/*outline: none;*/
+	margin-top: 20px;
+	margin-right: 50px;
+	float: right;
+}
 
+#chat {
+	display: none;
+	position: relative;
+	margin-top: 50px;
+	background-color: black;
+	border: 1px solid white;
+	width: 500px;
+	height: 615px;
+	color: white;
+	font-size: 20px;
+}
+#messages { list-style-type: none; margin: 0; padding: 0; }
+#messages li { padding: 5px 10px; }
+#messages li:nth-child(odd) { background: grey; }
+
+#inputMessage {
+	border: 10px solid #000;
+  bottom: 0;
+  height: 60px;
+  left: 0;
+  outline: none;
+  padding-left: 10px;
+  position: absolute;
+	right: 0;
+  width: 90%;
+}
+#msgDiv {
+	position: absolute;
+	bottom: 60px;
+	left: 0;
+	right: 0;
+	top: 0;
+	overflow: scroll;
+	word-wrap: break-word
+}
+
+@media only screen and (max-width: 1350px) {
+    #chat {
+			display: none;
+		}
+}
 
 #container {
 	text-align:center;
