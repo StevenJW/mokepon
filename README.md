@@ -13,6 +13,10 @@ Disclaimer: the images used or not my own and neither is the idea. It's based on
 For questions mail stevenvandenwildenberg@gmail.com
 
 # Recent Updates
+Update v2.2
+- Added chat
+- Added nametags
+
 Update v2.1
 - Added different view points to multiplayer and improved overall.
 - Fixed a lot of bugs, so see these just check the commit messages.
