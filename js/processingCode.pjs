@@ -13,7 +13,6 @@ PFont font;
 int counter;
 String trainerName = "";
 
-
 PImage mokepon, trainer, damonImage, grass, treeWall, tree, path, battleBackground, mokeponGrass, playerBattleStandGrass, enemyBattleStandGrass, mokeponGym, pokeBattleBall, trainerHouse, outsideGround, sofa, carpet, livingTable, chairFaceRight, tvFaceLeft, window, carpet2, dad, grandpa, grandma, bookShelf, chairFaceLeft, chairFaceDown, plant, sofaFaceRight, bed, kruk, desk, table, tv, roomFloor, wall, trainerWalkingForwardRight, trainerWalkingForwardLeft, trainerBackwards;
 PImage backWards = [], forWards = [], rightWards = [], leftWards = [];
 PImage scorpineImage, scorpineImagePlayer, scorpineIcon, herbarakImage, herbarakImagePlayer, herbarakIcon, hyponyImage, hyponyImagePlayer, hyponyIcon, donkoomImage, donkoomImagePlayer, donkoomIcon, chillenaImage, chillenaImagePlayer, chillenaIcon;
@@ -129,7 +128,7 @@ var missed = false;
 var enteredMenuChoice = false;
 var playersTurn = true;
 var lastScene = 1;
-var completed = 1; //Set to zero if done with the map!!!
+var completed = 0; //Set to zero if done with the map!!!
 var dialogNumber = 0;
 var activeDialog = false;
 var completedSentence = false;
@@ -543,7 +542,15 @@ Character.prototype.move = function(direction, trainerPositions, roomArray, accu
           setTimeout(function(){
             positionChangeY = accumulate(positionChangeY, 0.5);
             player.image = trainerPositions[0];
-            walking = false;
+            setTimeout(function(){
+              walking = false;
+            },50);
+            character.positions[0] = positionChangeX;
+            character.positions[1] = positionChangeY;
+            character.currentScene = currentScene;
+            socket.emit('user', {
+              player: character,
+            });
           }, FRAME_SPEED);
           this.rightOrLeftFoot++;
         }
@@ -561,7 +568,15 @@ Character.prototype.move = function(direction, trainerPositions, roomArray, accu
           setTimeout(function(){
             positionChangeX = accumulate(positionChangeX, 0.5);
             player.image = trainerPositions[0];
-            walking = false;
+            setTimeout(function(){
+              walking = false;
+            },50);
+            character.positions[0] = positionChangeX;
+            character.positions[1] = positionChangeY;
+            character.currentScene = currentScene;
+            socket.emit('user', {
+              player: character,
+            });
           }, FRAME_SPEED);
           this.rightOrLeftFoot++;
         }
@@ -576,7 +591,7 @@ void keyPressed(){
   var currentRoomGrid = [];
   var maxSize = [0,0];
 
-	if(starterPokemon == 1 || starterPokemon == 2 && completed != 1) {
+	if(starterPokemon == 1 || starterPokemon == 2 && completed < 1) {
 		if(key == 'a') {
 			starterPokemon = 1;
 			return;
@@ -665,12 +680,16 @@ void keyPressed(){
 
     if(key == 'w') {
       player.move("w", backWards, currentRoomGrid, function(a,b) { return a + b}, maxSize);
+      character.view = 'backwards';
     } else if(key == 's') {
       player.move("s", forWards, currentRoomGrid, function(a,b) { return a - b}, maxSize);
+      character.view = 'forwards';
     } else if(key == 'a') {
       player.move("a", leftWards, currentRoomGrid, function(a,b) { return a + b}, maxSize);
+      character.view = 'leftwards';
     } else if(key == 'd') {
       player.move("d", rightWards, currentRoomGrid, function(a,b) { return a - b}, maxSize);
+      character.view = 'rightwards';
     } else if(key == 'r') {
       //Checks if the player is standing next to an NPC and in the right direction.
       //If you can move direction in the spot this doesn't work anymore! (but you can't)
@@ -762,6 +781,7 @@ void keyPressed(){
 
 	slowDown = false;
   }
+
 }
 
 var startScreen = function() {
@@ -797,7 +817,35 @@ var invalidStep = function(xPosition, yPosition, accumulate, upOrDown, objectArr
   return true;
 }
 
-
+var multiplayer = function() {
+  for(var otherPlayer in players) {
+    if(players.hasOwnProperty(otherPlayer)) {
+      if(players[otherPlayer] != null) {
+        if(players[otherPlayer].currentScene == currentScene && players[otherPlayer].online == true) {
+          var tempImage = undefined;
+          switch(String(players[otherPlayer].view)) {
+            case 'forwards':
+              tempImage = forWards[0];
+              break;
+            case 'backwards':
+              tempImage = backWards[0];
+              break;
+            case 'rightwards':
+              tempImage = rightWards[0];
+              break;
+            case 'leftwards':
+              tempImage = leftWards[0];
+              break;
+            default:
+              //tempImage = forWards[0];
+              break;
+          }
+          image(tempImage, xSize/2 + (positionChangeX - players[otherPlayer].positions[0])*blockSize + 7, ySize/2 + (positionChangeY - players[otherPlayer].positions[1]  )*blockSize,30,38);
+        }
+      }
+    }
+  }
+}
 
 var trainerPosX = xSize/2;
 var trainerPosY = ySize/2;
@@ -843,12 +891,14 @@ var trainerBedRoom = function() {
   }
 
   //Add player spawning next to bed.
+  multiplayer();
   if(player.image != null) {
     image(player.image,trainerPosX + 7,trainerPosY,30,38);
   } else {
     player.image = forWards[0];
     image(player.image,trainerPosX + 7,trainerPosY,30,38);
   }
+
 }
 
 //Livingroom
@@ -911,7 +961,7 @@ var trainerLivingRoom = function() {
       }
     }
   }
-
+  multiplayer();
   if(player.image != null) {
     image(player.image,trainerPosX + 5,trainerPosY ,30,38);
   } else {
@@ -1071,9 +1121,10 @@ var bigMap = function() {
       positionChangeY = -6;
     }
   }
+  multiplayer();
   //Check if player walks into the trainer
-	if(walking == false && completed < 2) {
-		if(-positionChangeY >= 16 && -positionChangeY <= 19 && -positionChangeX == 18) {
+	if(completed < 2) {
+		if(-positionChangeY >= 16 && -positionChangeY <= 19 && -positionChangeX >= 18) {
       if(activeDialog != true) {
         setTimeout(function() {
           trainerBattle(damon);
@@ -1091,7 +1142,7 @@ var bigMap = function() {
 		}
 	}
   //Check if player walks in to second trainer
-  if(walking == false && completed < 3) {
+  if(completed < 3) {
 		if(-positionChangeY == 8 && -positionChangeX >= 13 && -positionChangeX <= 16) {
       if(activeDialog != true) {
         setTimeout(function() {
@@ -1126,7 +1177,6 @@ var bigMap = function() {
   		}
     }
   }
-
   image(player.image,trainerPosX + 5,trainerPosY,32,41);
 
 }
@@ -1205,7 +1255,7 @@ var performAttack = function() {
 //Temporarily adding first pokemon to trainer for test purposes
 //player.mokepon.push(chillena);
 //player.mokepon.push(hypony);
-player.mokepon.push(scorpine);
+//player.mokepon.push(scorpine);
 
 var catchMokepon = function() {
 	if(catchedMokepon == null) {
@@ -1303,6 +1353,7 @@ var quitBattle = function() {
 	playerRun = false;
   slowDown = false;
   isMusicPlaying = false;
+  activeDialog = false;
 }
 
 var wildMokeponBattle = function() {
@@ -1312,6 +1363,7 @@ var wildMokeponBattle = function() {
       if(currentScene == 5) {
         currentPlayerMusic.pause();
         currentPlayerMusic = battleMusic2;
+        //currentPlayerMusic.load();
         currentPlayerMusic.loop();
       }
     },13000);
@@ -1320,8 +1372,8 @@ var wildMokeponBattle = function() {
   if(isMusicPlaying == false) {
     isMusicPlaying = true;
     currentPlayerMusic.pause();
-    currentPlayerMusic.rewind();
     currentPlayerMusic = battleMusic1;
+    //currentPlayerMusic.load();
     currentPlayerMusic.loop();
   }
 
@@ -1485,20 +1537,14 @@ var wildMokeponBattle = function() {
 						continueBattle = false;
 						setTimeout(function() {
 							tempDamage = int(playerHealthBar - (200*currentMokepon.attacks[randomAttack].damage/player.mokepon[currentPlayerMokepon].health));
+              if(tempDamage == 200) {
+                setTimeout(function(){
+                  tempDamage = 200;
+                  playersTurn = true;
+                  randomAttack = null;
+                },1000);
+              }
 						}, 2000);
-						/*setTimeout(function() {
-							if(continueBattle == true) {
-								tempDamage = 200;
-								playersTurn = true;
-								randomAttack = null;
-							} else {
-								setTimeout(function() {
-									tempDamage = 200;
-									playersTurn = true;
-									randomAttack = null;
-								},2500);
-							}
-						}, 4000);*/
 					} else {
 						missed = true;
 						setTimeout(function() {
@@ -1547,6 +1593,8 @@ var wildMokeponBattle = function() {
 
 		//Mokepon enemy health/name bar
 		if(enemyHealthBar != 0) {
+      stroke(0);
+			strokeWeight(2);
 			//image(currentEnemy.mokepon[currentEnemyMokepon].image, 500, 240- battlePosition);
 			image(currentMokepon.frontImage, 500, 240-battlePosition);
 			//image(chillenaImage, 500, 240- battlePosition);
@@ -1565,13 +1613,13 @@ var wildMokeponBattle = function() {
 
     if(playerHealthBar > 0 && enemyHealthBar > 0) {
   		if(playersTurn) {
-  			if(enemyHealthBar > tempDamage && enemyHealthBar >= 0) {
+  			if(enemyHealthBar > tempDamage) {
   				enemyHealthBar--;
   			} else {
   				continueBattle = true;
   			}
   		} else {
-  			if(playerHealthBar > tempDamage && playerHealthBar >= 0) {
+  			if(playerHealthBar > tempDamage) {
   				playerHealthBar--;
           if(playerHealthBar == 0 || playerHealthBar == tempDamage) {
             tempDamage = 200;
@@ -1591,10 +1639,11 @@ var wildMokeponBattle = function() {
 			continueBattle = false;
 			fill(0);
 			textSize(25);
-			currentPlayerMokepon++;
-      currentEnemyMokepon++;
-			if(player.mokepon[currentPlayerMokepon] != null ) {
+      checkMokepon++;
+			checkEnemyMokepon++;
+			if(player.mokepon[checkMokepon] != null && playerHealthBar <= 0 ) {
 				if(playerHealthBar <= 0) {
+          currentPlayerMokepon = checkMokepon;
 					playerHealthBar = 200;
 					enteredAttackChoice = false;
 					enteredMenuChoice = false;
@@ -1608,7 +1657,6 @@ var wildMokeponBattle = function() {
 					setTimeout(function() {
 						switchingPokemon = false;
 					}, 3000);
-          currentEnemyMokepon--;
 				}
 			} else if(playerHealthBar <= 0) {
         if(slowDown != true) {
@@ -1638,20 +1686,20 @@ var wildMokeponBattle = function() {
           text("You lost the battle! Let's head back home.", 50, 288*1.8);
         }
 			} else if(enemyHealthBar <= 0) {
-          if(trainerActive != true || currentTrainer.mokepons[currentEnemyMokepon] == null) {
-            if(slowDown != true) {
-              setTimeout(function() {
-                quitBattle();
-                slowDown = false;
-                if(trainerActive) {
-                  completed++;
-                }
-                currentTrainer = null;
-                currentMokepon = null;
-                trainerActive = false;
-                currentEnemyMokepon = 0;
-              }, 3000);
-            }
+        if(trainerActive != true || currentTrainer.mokepons[checkEnemyMokepon] == null) {
+          if(slowDown != true) {
+            setTimeout(function() {
+              quitBattle();
+              slowDown = false;
+              if(trainerActive) {
+                completed++;
+              }
+              currentTrainer = null;
+              currentMokepon = null;
+              trainerActive = false;
+              currentEnemyMokepon = 0;
+            }, 3000);
+          }
           slowDown = true;
           fill(255);
           strokeWeight(5);
@@ -1661,8 +1709,8 @@ var wildMokeponBattle = function() {
           text("You won the battle! Congratulations!", 50, 288*1.8);
           continueBattle = false;
         } else {
+          currentEnemyMokepon = checkEnemyMokepon;
           currentMokepon = currentTrainer.mokepons[currentEnemyMokepon];
-          currentEnemyMokepon++;
           enemyHealthBar = 200;
           enteredAttackChoice = false;
           enteredMenuChoice = false;
@@ -1680,8 +1728,6 @@ var wildMokeponBattle = function() {
           }, 3000);
         }
       }
-      currentPlayerMokepon--;
-      currentEnemyMokepon--;
 		}
 		if(switchingPokemon == true) {
       if(switchingTrainer != true) {
@@ -1690,6 +1736,7 @@ var wildMokeponBattle = function() {
   			rect(0, 288*1.62, 800, battlePosition);
   			fill(0);
   			textSize(25);
+        tempDamage = 200;
   			text(player.mokepon[checkMokepon].name + " fainted, " + trainerName + " switched to " + player.mokepon[currentPlayerMokepon].name + "!", 50, 288*1.8);
       } else {
         fill(255);
@@ -1697,6 +1744,7 @@ var wildMokeponBattle = function() {
         rect(0, 288*1.62, 800, battlePosition);
         fill(0);
         textSize(25);
+        tempDamage = 200;
         text(currentTrainer.mokepons[checkEnemyMokepon].name + " fainted, " + currentTrainer.name + " switched to " + currentTrainer.mokepons[currentEnemyMokepon].name + "!", 50, 288*1.8);
       }
 		}
@@ -1874,6 +1922,8 @@ draw = function() {
       break;
   }
   fill(255);
+  textSize(20);
+  text((Object.keys(players).length+1) + " players online", 20,20);
   //text(mouseX,mouseX+10,mouseY);
   //text(mouseY,mouseX+10,mouseY+10);
 }
