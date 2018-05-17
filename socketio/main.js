@@ -20,6 +20,7 @@ io.on('connection', socket => {
       playerid = data.player.id
       players[playerid] = data.player;
     }
+
     if(data.player.currentScene > 0) {
       socket.broadcast.emit('player', {
         player: data.player
@@ -28,12 +29,18 @@ io.on('connection', socket => {
 	});
 
   socket.on('disconnect', function() {
-    players[playerid] = null;
     socket.broadcast.emit('playerDisconnect', {
       id: playerid
     });
+    players[playerid] = null;
     //Add emit when so player can be deleted.
   });
 
+  socket.on('chatMessage', function(data) {
+    socket.broadcast.emit('chatMessage', {
+      player: data.player,
+      msg: data.msg
+    });
+  });
 
 });
