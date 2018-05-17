@@ -11,3 +11,14 @@ You will have to click on the canvas first so it's focused and backspace does no
 
 Disclaimer: the images used or not my own and neither is the idea. It's based on pokemon and I'm not using it commercially whatsoever.  
 For questions mail stevenvandenwildenberg@gmail.com
+
+# Recent Updates
+Update v2.1
+- Added different view points to multiplayer and improved overall.
+- Fixed a lot of bugs, so see these just check the commit messages.
+
+Update v2.0
+- Added multiplayer!
+
+Update v1.0
+- Made mokepon
