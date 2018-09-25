@@ -9,8 +9,12 @@ It is possible to see the result at [No longer available]
 You will have to click on the canvas first so it's focused and backspace does not work in google chrome but you can use delete instead.  
 
 
+
 Disclaimer: the images used or not my own and neither is the idea. It's based on pokemon and I'm not using it commercially whatsoever.  
 
+After having done the project there are a couple things I could've done better.   
+ The code could've been more compact I think if I used more functions and programmed a bit more OO.
+ Also the I could've commented a bit more.
 
 # Recent Updates
 Update v2.2
