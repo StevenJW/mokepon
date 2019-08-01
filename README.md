@@ -18,7 +18,8 @@ After having done the project there are a couple things I could've done better.
    
  === 2019 Edit ===  
  If you really want to try this out, send a pull request with contact information in the README, it's probably not really worth it though.  
- The code should've definitely been split up in more files btw :')
+ The code should've definitely been split up in more files btw :')  
+ I'm a bit embarrased by the code I have written..  
 
 # Recent Updates
 Update v2.2
